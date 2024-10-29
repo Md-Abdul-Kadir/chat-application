@@ -1,8 +1,16 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/People");
+const { unlink } = require("../router/userRouter");
 
-function getUsers(req, res, next) {
-  res.render("users");
+async function getUsers(req, res, next) {
+  try {
+    const users = await User.find();
+    res.render("users", {
+      users: users,
+    });
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function addUser(req, res, next) {
@@ -25,10 +33,34 @@ async function addUser(req, res, next) {
     const result = await newUser.save();
     res.status(200).json({ message: "User added successfully", user: result });
   } catch (err) {
-    req.status(500).json({
+    res.status(500).json({
       message: "An error occurred while Upload avatar ",
     });
   }
 }
 
-module.exports = { getUsers, addUser };
+async function removeUser(req, res, next) {
+  const id = req.params.id;
+  try {
+    const detetedUser = await User.findByIdAndDelete({
+      _id: id,
+    });
+
+    if (detetedUser.avatar) {
+      unlink(
+        path.join(
+          __dirname,
+          `/../public/uploads/avatars/${detetedUser.avatar}`
+        ),
+        (err) => {
+          if (errr) console.log(err);
+        }
+      );
+    }
+    res.status(200).json({ message: "User Deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Could not Delete user" });
+  }
+}
+
+module.exports = { getUsers, addUser, removeUser };

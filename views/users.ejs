@@ -38,16 +38,26 @@
             </tr>
           </thead>
           <tbody id="users-table">
-            <tr id="">
+            <% users.forEach(function (user) { %>
+            <tr id="<%= user._id %>">
               <td class="name">
-                <img src="./images/user1.png" />
-                <span>User 1</span>
+                <% if(user.avatar) {%>
+                <img src="./uploads/avatars/<%= user.avatar %>" />
+                <% } else {%>
+                <img src="./images/nophoto.png" />
+                <% } %>
+                <span><%= user.name %></span>
               </td>
-              <td>email@email.com</td>
+              <td><%= user.email %></td>
               <td class="manage">
-                <img src="./images/trash.png" alt="Delete" />
+                <img
+                  src="./images/trash.png"
+                  alt="Delete"
+                  onclick="deleteUser('<%= user._id %>')"
+                />
               </td>
             </tr>
+            <% }); %>
           </tbody>
         </table>
       </div>
@@ -113,8 +123,8 @@
         }
 
         const inputErrors = document.querySelectorAll("input.error");
-        for (let i = 0; i < inputErrors.length; i++) {
-          inputErrors[i].classList.remove("error");
+        for (let j = 0; j < inputErrors.length; j++) {
+          inputErrors[j].classList.remove("error");
         }
 
         const formDate = new FormData(form);
@@ -148,6 +158,33 @@
           }, 1000);
         }
       };
+
+      // delete user
+      const deleteError = Toastify({
+        text: "Could not delete user",
+        duration: 1000,
+      });
+      const deleteSuccess = Toastify({
+        text: "User deleted successfully",
+        duration: 1000,
+      });
+      async function deleteUser(userId) {
+        const response = await fetch(`users/${userId}`, {
+          method: "DELETE",
+        });
+
+        let result = await response.json();
+        if (result.errors) {
+          deleteError.showToast();
+        } else {
+          deleteSuccess.showToast();
+          document.getElementById(userId).remove();
+          // reload page
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        }
+      }
     </script>
   </body>
 </html>
